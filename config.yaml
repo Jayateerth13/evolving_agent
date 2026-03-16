@@ -1,0 +1,49 @@
+# ─────────────────────────────────────────────────────────────────────
+# R&D Multi-Agent ML System — Global Configuration
+# ─────────────────────────────────────────────────────────────────────
+
+project:
+  name: "rdkit-multiagent"
+  workspace_dir: "."
+
+# ── LLM (NVIDIA Nemotron) ───────────────────────────────────────────
+llm:
+  provider: "nvidia"                    # nvidia | openrouter
+  model: "nvidia/llama-3.3-nemotron-super-49b-v1"
+  # api_key loaded from env: NVIDIA_API_KEY or OPENROUTER_API_KEY
+  temperature: 0.3
+  max_tokens: 4096
+
+# ── MLflow ───────────────────────────────────────────────────────────
+mlflow:
+  tracking_uri: "http://localhost:5000"
+  experiment_name: "rdkit-multiagent"
+
+# ── Code Executor ────────────────────────────────────────────────────
+executor:
+  backend: "local"                      # docker | local
+  timeout: 300
+  # Docker-only settings:
+  cpu_limit: 4
+  memory_limit: "4g"
+  network_disabled: true
+
+# ── Data Store ───────────────────────────────────────────────────────
+datastore:
+  base_path: "./data/versions"
+
+# ── Dataset ──────────────────────────────────────────────────────────
+dataset:
+  path: ""                              # Path to input CSV
+  target_column: ""
+  task_type: "classification"           # classification | regression
+  primary_metric: "auc"                 # auc | f1 | rmse | accuracy
+  metric_target: 0.90
+
+# ── Agent Settings ───────────────────────────────────────────────────
+agent:
+  max_iterations: 10
+  stall_threshold: 0.001
+  max_stall_count: 3
+  top_k_features: 5
+  poll_interval_seconds: 10

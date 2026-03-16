@@ -1,0 +1,229 @@
+{
+  "$defs": {
+    "HypothesisEntry": {
+      "description": "One entry in the hypothesis log written by the Data Mining Agent.",
+      "properties": {
+        "iteration": {
+          "title": "Iteration",
+          "type": "integer"
+        },
+        "hypothesis": {
+          "title": "Hypothesis",
+          "type": "string"
+        },
+        "rationale": {
+          "title": "Rationale",
+          "type": "string"
+        },
+        "outcome": {
+          "default": "",
+          "title": "Outcome",
+          "type": "string"
+        },
+        "metric_before": {
+          "default": 0.0,
+          "title": "Metric Before",
+          "type": "number"
+        },
+        "metric_after": {
+          "default": 0.0,
+          "title": "Metric After",
+          "type": "number"
+        },
+        "timestamp": {
+          "title": "Timestamp",
+          "type": "string"
+        }
+      },
+      "required": [
+        "iteration",
+        "hypothesis",
+        "rationale"
+      ],
+      "title": "HypothesisEntry",
+      "type": "object"
+    },
+    "MetricSet": {
+      "description": "Metrics for a single evaluation split (train / val / test).",
+      "properties": {
+        "auc": {
+          "default": 0.0,
+          "title": "Auc",
+          "type": "number"
+        },
+        "accuracy": {
+          "default": 0.0,
+          "title": "Accuracy",
+          "type": "number"
+        },
+        "f1": {
+          "default": 0.0,
+          "title": "F1",
+          "type": "number"
+        },
+        "rmse": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rmse"
+        },
+        "log_loss": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Log Loss"
+        },
+        "custom": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Custom",
+          "type": "object"
+        }
+      },
+      "title": "MetricSet",
+      "type": "object"
+    },
+    "Metrics": {
+      "description": "Container holding metric sets for each data split.",
+      "properties": {
+        "val": {
+          "$ref": "#/$defs/MetricSet"
+        },
+        "train": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MetricSet"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "test": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MetricSet"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "Metrics",
+      "type": "object"
+    },
+    "Status": {
+      "description": "Pipeline status \u2014 drives the Orchestrator's routing logic.",
+      "enum": [
+        "running",
+        "stalled",
+        "staged",
+        "promoted",
+        "rejected"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "description": "The shared boundary contract between all agents.\n\nSchema version is pinned so consumers can validate without importing\nPython \u2014 the JSON Schema is exported to ``schemas/experiment_context.json``.",
+  "properties": {
+    "schema_version": {
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "iteration": {
+      "default": 0,
+      "title": "Iteration",
+      "type": "integer"
+    },
+    "status": {
+      "$ref": "#/$defs/Status",
+      "default": "running"
+    },
+    "dataset_version_id": {
+      "default": "",
+      "title": "Dataset Version Id",
+      "type": "string"
+    },
+    "feature_set_id": {
+      "default": "",
+      "title": "Feature Set Id",
+      "type": "string"
+    },
+    "model_spec": {
+      "additionalProperties": true,
+      "title": "Model Spec",
+      "type": "object"
+    },
+    "metrics": {
+      "$ref": "#/$defs/Metrics"
+    },
+    "improvement_delta": {
+      "default": 0.0,
+      "title": "Improvement Delta",
+      "type": "number"
+    },
+    "stall_count": {
+      "default": 0,
+      "title": "Stall Count",
+      "type": "integer"
+    },
+    "max_stall_count": {
+      "default": 3,
+      "title": "Max Stall Count",
+      "type": "integer"
+    },
+    "paper_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Paper Refs",
+      "type": "array"
+    },
+    "hypothesis_log": {
+      "items": {
+        "$ref": "#/$defs/HypothesisEntry"
+      },
+      "title": "Hypothesis Log",
+      "type": "array"
+    },
+    "best_run_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Best Run Ids",
+      "type": "array"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "updated_at": {
+      "title": "Updated At",
+      "type": "string"
+    }
+  },
+  "title": "ExperimentContext",
+  "type": "object"
+}
