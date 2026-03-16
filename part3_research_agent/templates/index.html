@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 3: Research Paper Agent</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 2rem; }
+    h1 { margin-top: 0; }
+    .muted { color: #666; font-size: 0.95rem; }
+    form { margin: 1.5rem 0; }
+    input[type="text"], textarea { width: 100%; padding: 0.6rem; margin-bottom: 0.5rem; font-size: 1rem; }
+    button { padding: 0.6rem 1.2rem; font-size: 1rem; cursor: pointer; background: #333; color: #fff; border: none; border-radius: 4px; }
+    button:hover { background: #555; }
+    .error { color: #c00; margin: 1rem 0; }
+    .summary { background: #f0f4f8; padding: 1rem; border-radius: 6px; margin: 1rem 0; }
+    .paper { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin: 1rem 0; }
+    .paper h3 { margin: 0 0 0.5rem 0; font-size: 1.1rem; }
+    .paper .meta { color: #666; font-size: 0.9rem; margin-bottom: 0.5rem; }
+    .paper .abstract { font-size: 0.95rem; line-height: 1.4; }
+    .paper a { color: #0066cc; }
+    .paper .source { display: inline-block; background: #eee; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-right: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Part 3: Research Paper Agent</h1>
+  <p class="muted">Enter a topic or project idea. The agent uses Nemotron to plan and rank, and fetches relevant papers from Semantic Scholar and arXiv.</p>
+
+  <form method="post" action="/">
+    <input type="text" name="query" placeholder="e.g. transformer models for tabular data" value="{{ query or '' }}" />
+    <button type="submit">Find research papers</button>
+  </form>
+
+  {% if error %}
+  <p class="error">{{ error }}</p>
+  {% endif %}
+
+  {% if result %}
+  <div class="summary"><strong>Summary:</strong> {{ result.summary }}</div>
+  <p class="muted">Queries used: {{ result.search_queries_used | join(", ") }}</p>
+  <h2>Papers ({{ result.papers | length }})</h2>
+  {% for p in result.papers %}
+  <div class="paper">
+    <span class="source">{{ p.source }}</span>
+    <h3>{{ p.title }}</h3>
+    <div class="meta">
+      {% if p.authors %}{{ p.authors }}{% endif %}
+      {% if p.year %} · {{ p.year }}{% endif %}
+      {% if p.citation_count %} · {{ p.citation_count }} citations{% endif %}
+    </div>
+    {% if p.abstract %}<p class="abstract">{{ p.abstract }}</p>{% endif %}
+    <p>
+      <a href="{{ p.url }}" target="_blank" rel="noopener">View</a>
+      {% if p.pdf_url %}<a href="{{ p.pdf_url }}" target="_blank" rel="noopener">PDF</a>{% endif %}
+    </p>
+  </div>
+  {% endfor %}
+  {% endif %}
+</body>
+</html>
