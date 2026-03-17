@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "6512cb9f948c",
+  "iteration": 3,
+  "status": "stalled",
+  "dataset_version_id": "titanic_73a0d2644d23",
+  "feature_set_id": "titanic_73a0d2644d23",
+  "model_spec": {},
+  "metrics": {
+    "val": {
+      "auc": 0.878215,
+      "accuracy": 0.0,
+      "f1": 0.0,
+      "rmse": null,
+      "log_loss": null,
+      "custom": {}
+    },
+    "train": null,
+    "test": null
+  },
+  "improvement_delta": 0.878215,
+  "stall_count": 3,
+  "max_stall_count": 3,
+  "paper_refs": [],
+  "hypothesis_log": [
+    {
+      "iteration": 0,
+      "hypothesis": "Fill missing Age with median()",
+      "rationale": "Age has 19.9% missing values",
+      "outcome": "no_improvement",
+      "metric_before": 0.878215,
+      "metric_after": 0.878215,
+      "timestamp": "2026-03-17T00:06:18.153051+00:00"
+    },
+    {
+      "iteration": 1,
+      "hypothesis": "Fill missing Age with median()",
+      "rationale": "Age has 19.9% missing values",
+      "outcome": "no_improvement",
+      "metric_before": 0.878215,
+      "metric_after": 0.878215,
+      "timestamp": "2026-03-17T00:06:20.525538+00:00"
+    },
+    {
+      "iteration": 2,
+      "hypothesis": "Fill missing Age with median()",
+      "rationale": "Age has 19.9% missing values",
+      "outcome": "no_improvement",
+      "metric_before": 0.878215,
+      "metric_after": 0.878215,
+      "timestamp": "2026-03-17T00:06:22.672107+00:00"
+    },
+    {
+      "iteration": 3,
+      "hypothesis": "Fill missing Age with median()",
+      "rationale": "Age has 19.9% missing values",
+      "outcome": "no_improvement",
+      "metric_before": 0.878215,
+      "metric_after": 0.878215,
+      "timestamp": "2026-03-17T00:06:24.960268+00:00"
+    }
+  ],
+  "best_run_ids": [
+    "5ac7658a1371414196a5fc36b41e95fa"
+  ],
+  "created_at": "2026-03-17T00:06:13.649585+00:00",
+  "updated_at": "2026-03-17T00:06:24.960318+00:00"
+}
