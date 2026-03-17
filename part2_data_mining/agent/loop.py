@@ -34,9 +34,9 @@ RESET = "\033[0m"
 
 
 def _header(text: str) -> None:
-    print(f"\n{BOLD}{'═' * 60}")
+    print(f"\n{BOLD}{'=' * 60}")
     print(f"  {text}")
-    print(f"{'═' * 60}{RESET}")
+    print(f"{'=' * 60}{RESET}")
 
 
 def _step(icon: str, text: str) -> None:
@@ -73,7 +73,7 @@ def run_data_mining_agent(
     max_iterations = settings.agent.max_iterations
     stall_threshold = settings.agent.stall_threshold
 
-    _header("Data Mining Agent — Initializing")
+    _header("Data Mining Agent -- Initializing")
 
     # ── Setup tools ──────────────────────────────────────────────
     llm = LLMClient(
@@ -88,35 +88,41 @@ def run_data_mining_agent(
             experiment_name=settings.mlflow.experiment_name,
         )
     except Exception:
-        _step("⚠️ ", "MLflow unavailable — running without experiment tracking")
+        _step("!!", "MLflow unavailable -- running without experiment tracking")
         tracker = None  # type: ignore[assignment]
     datastore = DataStore(base_path=settings.datastore.base_path)
 
     # ── Load + profile dataset ───────────────────────────────────
-    _step("📂", f"Loading {dataset_path}")
+    _step(">>", f"Loading {dataset_path}")
     df = pd.read_csv(dataset_path)
-    _step("📊", f"Profiling: {len(df)} rows, {len(df.columns)} columns")
+    _step(">>", f"Profiling: {len(df)} rows, {len(df.columns)} columns")
 
     profile = profile_dataset(df, target_column, task_type)
     schema_str = format_schema_for_llm(df, target_column)
 
     version_id = datastore.save_dataset(df, name=Path(dataset_path).stem)
-    _step("💾", f"Dataset saved: {version_id}")
+    _step(">>", f"Dataset saved: {version_id}")
 
     if profile.missing_rates:
         missing = ", ".join(f"{k} ({v*100:.1f}%)" for k, v in profile.missing_rates.items())
-        _step("⚠️ ", f"Missing: {missing}")
+        _step("!!", f"Missing: {missing}")
     if profile.leakage_candidates:
-        _step("🚨", f"Leakage risk: {profile.leakage_candidates}")
+        _step("!!", f"Leakage risk: {profile.leakage_candidates}")
 
-    # ── Initialize context ───────────────────────────────────────
-    ctx = ExperimentContext(
-        dataset_version_id=version_id,
-        max_stall_count=settings.agent.max_stall_count,
-    )
+    # ── Initialize or resume context ─────────────────────────────
+    if Path(context_path).exists():
+        ctx = ExperimentContext.load(context_path)
+        _step(">>", f"Resumed context: iteration={ctx.iteration}, status={ctx.status.value}")
+    else:
+        ctx = ExperimentContext()
 
-    best_metric = 0.0
-    best_run_id: str | None = None
+    ctx.dataset_version_id = version_id
+    ctx.max_stall_count = settings.agent.max_stall_count
+    ctx.status = Status.RUNNING
+    research_already_helped = bool(ctx.paper_refs)
+
+    best_metric = ctx.metrics.val.auc
+    best_run_id: str | None = ctx.best_run_ids[-1] if ctx.best_run_ids else None
     all_proposals: list[FeatureProposal] = []
 
     # ── Iteration loop ───────────────────────────────────────────
@@ -124,10 +130,10 @@ def run_data_mining_agent(
         ctx.iteration = iteration
         is_baseline = iteration == 0
 
-        _header(f"Iteration {iteration}" + (" — Baseline" if is_baseline else ""))
+        _header(f"Iteration {iteration}" + (" -- Baseline" if is_baseline else ""))
 
         # ── Step 1: Propose features via LLM ─────────────────────
-        _step("🤖", "Asking Nemotron for feature engineering ideas...")
+        _step(">>", "Asking Nemotron for feature engineering ideas...")
 
         if is_baseline:
             proposals = propose_features(profile, schema_str, llm, top_k=settings.agent.top_k_features)
@@ -139,7 +145,7 @@ def run_data_mining_agent(
                 profile,
                 llm,
             )
-            _step("💡", f"Hypothesis: {hypothesis.description}")
+            _step(">>", f"Hypothesis: {hypothesis.description}")
             proposals = propose_features(
                 profile, schema_str, llm,
                 strategy=hypothesis.technique,
@@ -147,11 +153,11 @@ def run_data_mining_agent(
             )
 
         for p in proposals:
-            _step("  →", f"{p.name}: {p.description} {DIM}(+{p.expected_uplift:.3f}){RESET}")
+            _step("  ->", f"{p.name}: {p.description} {DIM}(+{p.expected_uplift:.3f}){RESET}")
         all_proposals = proposals if is_baseline else all_proposals + proposals
 
         # ── Step 2: Train with proposed features ─────────────────
-        _step("🏋️", "Training LightGBM (5-fold CV)...")
+        _step(">>", "Training LightGBM (5-fold CV)...")
 
         run_id, metrics, applied = run_experiment(
             df=df,
@@ -170,7 +176,7 @@ def run_data_mining_agent(
                 _metric(name, val, delta if name == f"val_{primary_metric}" else None)
 
         if applied:
-            _step("✅", f"Applied: {', '.join(applied)}")
+            _step("OK", f"Applied: {', '.join(applied)}")
 
         # ── Step 3: Compare + update state ───────────────────────
         if is_baseline or current_metric > best_metric:
@@ -182,10 +188,10 @@ def run_data_mining_agent(
             ctx.improvement_delta = improvement
 
             if not is_baseline:
-                _step(GREEN + "📈", f"New best! {primary_metric} = {best_metric:.4f}{RESET}")
+                _step(GREEN + ">>", f"New best! {primary_metric} = {best_metric:.4f}{RESET}")
         else:
             ctx.mark_stalled()
-            _step(YELLOW + "📉", f"No improvement (delta={delta:.4f}), stall {ctx.stall_count}/{ctx.max_stall_count}{RESET}")
+            _step(YELLOW + ">>", f"No improvement (delta={delta:.4f}), stall {ctx.stall_count}/{ctx.max_stall_count}{RESET}")
 
         ctx.metrics.val.auc = best_metric
         ctx.feature_set_id = version_id
@@ -200,25 +206,32 @@ def run_data_mining_agent(
 
         # ── Step 4: Check termination ────────────────────────────
         if ctx.status == Status.STALLED:
-            _header(f"STALLED after {iteration + 1} iterations")
-            _step("📝", f"Best {primary_metric}: {best_metric:.4f}")
-            _step("🔄", "Research Copilot will take over...")
-            break
+            if research_already_helped:
+                ctx.mark_staged()
+                _header(f"STAGED after research -- best {primary_metric}: {best_metric:.4f}")
+                _step(">>", "Research Copilot already contributed insights")
+                _step(">>", "Handing off to Kaggle Agent for final sweep...")
+                break
+            else:
+                _header(f"STALLED after {iteration + 1} iterations")
+                _step(">>", f"Best {primary_metric}: {best_metric:.4f}")
+                _step(">>", "Research Copilot will take over...")
+                break
 
         if best_metric >= metric_target:
             ctx.mark_staged()
-            _header(f"TARGET REACHED — {primary_metric} = {best_metric:.4f}")
-            _step("🎯", f"Target was {metric_target:.4f}")
-            _step("➡️ ", "Handing off to Kaggle Agent...")
+            _header(f"TARGET REACHED -- {primary_metric} = {best_metric:.4f}")
+            _step(">>", f"Target was {metric_target:.4f}")
+            _step(">>", "Handing off to Kaggle Agent...")
             break
 
     # ── Write context + exit ─────────────────────────────────────
     if ctx.status == Status.RUNNING:
         ctx.mark_staged()
-        _header(f"Max iterations reached — best {primary_metric}: {best_metric:.4f}")
+        _header(f"Max iterations reached -- best {primary_metric}: {best_metric:.4f}")
 
     ctx.save(context_path)
-    _step("💾", f"Context written to {context_path} (status: {ctx.status.value})")
+    _step(">>", f"Context written to {context_path} (status: {ctx.status.value})")
     return ctx
 
 

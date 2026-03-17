@@ -1,11 +1,35 @@
 {
   "schema_version": "1.0.0",
-  "run_id": "6512cb9f948c",
-  "iteration": 3,
-  "status": "stalled",
+  "run_id": "941c6dae4b06",
+  "iteration": 2,
+  "status": "rejected",
   "dataset_version_id": "titanic_73a0d2644d23",
   "feature_set_id": "titanic_73a0d2644d23",
-  "model_spec": {},
+  "model_spec": {
+    "paper_title": "Online Gradient Boosting Decision Tree: In-Place Updates for Efficient Adding/Deleting Data",
+    "paper_id": "2502.01634v1",
+    "architecture": "gradient_boosting_with_target_encoding",
+    "framework": "lightgbm",
+    "hyperparameters": {
+      "n_estimators": 500,
+      "learning_rate": 0.03,
+      "max_depth": 8,
+      "num_leaves": 63,
+      "reg_alpha": 0.1,
+      "reg_lambda": 1.0,
+      "min_child_samples": 20
+    },
+    "preprocessing_steps": [
+      "target_encode_high_cardinality",
+      "fill_missing_with_median",
+      "log_transform_skewed"
+    ],
+    "training_recipe": {
+      "cv_folds": 5,
+      "early_stopping_rounds": 50
+    },
+    "notes": "Fallback spec — enhanced LightGBM with target encoding and regularization"
+  },
   "metrics": {
     "val": {
       "auc": 0.878215,
@@ -18,10 +42,12 @@
     "train": null,
     "test": null
   },
-  "improvement_delta": 0.878215,
-  "stall_count": 3,
-  "max_stall_count": 3,
-  "paper_refs": [],
+  "improvement_delta": 0.0,
+  "stall_count": 2,
+  "max_stall_count": 2,
+  "paper_refs": [
+    "2502.01634v1"
+  ],
   "hypothesis_log": [
     {
       "iteration": 0,
@@ -30,7 +56,7 @@
       "outcome": "no_improvement",
       "metric_before": 0.878215,
       "metric_after": 0.878215,
-      "timestamp": "2026-03-17T00:06:18.153051+00:00"
+      "timestamp": "2026-03-17T00:29:57.343715+00:00"
     },
     {
       "iteration": 1,
@@ -39,7 +65,7 @@
       "outcome": "no_improvement",
       "metric_before": 0.878215,
       "metric_after": 0.878215,
-      "timestamp": "2026-03-17T00:06:20.525538+00:00"
+      "timestamp": "2026-03-17T00:29:59.423185+00:00"
     },
     {
       "iteration": 2,
@@ -48,21 +74,43 @@
       "outcome": "no_improvement",
       "metric_before": 0.878215,
       "metric_after": 0.878215,
-      "timestamp": "2026-03-17T00:06:22.672107+00:00"
+      "timestamp": "2026-03-17T00:30:01.491127+00:00"
     },
     {
-      "iteration": 3,
+      "iteration": 0,
       "hypothesis": "Fill missing Age with median()",
       "rationale": "Age has 19.9% missing values",
       "outcome": "no_improvement",
       "metric_before": 0.878215,
       "metric_after": 0.878215,
-      "timestamp": "2026-03-17T00:06:24.960268+00:00"
+      "timestamp": "2026-03-17T00:30:28.893711+00:00"
+    },
+    {
+      "iteration": 1,
+      "hypothesis": "Fill missing Age with median()",
+      "rationale": "Age has 19.9% missing values",
+      "outcome": "no_improvement",
+      "metric_before": 0.878215,
+      "metric_after": 0.878215,
+      "timestamp": "2026-03-17T00:30:31.691804+00:00"
+    },
+    {
+      "iteration": 2,
+      "hypothesis": "Fill missing Age with median()",
+      "rationale": "Age has 19.9% missing values",
+      "outcome": "no_improvement",
+      "metric_before": 0.878215,
+      "metric_after": 0.878215,
+      "timestamp": "2026-03-17T00:30:33.815636+00:00"
     }
   ],
   "best_run_ids": [
-    "5ac7658a1371414196a5fc36b41e95fa"
+    "f2091764c93a490ea17d8d9a9862aa12",
+    "ecec4d6bed4249a480e0916b637d312c",
+    "d4933fcd18394ad89c4bafac5a48a1b8",
+    "c35b9064feb642c687fad7a93bc73d2f",
+    "549dff6fbace4fd78ae612c932581444"
   ],
-  "created_at": "2026-03-17T00:06:13.649585+00:00",
-  "updated_at": "2026-03-17T00:06:24.960318+00:00"
+  "created_at": "2026-03-17T00:29:49.271776+00:00",
+  "updated_at": "2026-03-17T00:31:26.064310+00:00"
 }

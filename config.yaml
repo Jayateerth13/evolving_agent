@@ -42,8 +42,8 @@ dataset:
 
 # ── Agent Settings ───────────────────────────────────────────────────
 agent:
-  max_iterations: 4
+  max_iterations: 3
   stall_threshold: 0.001
-  max_stall_count: 3
+  max_stall_count: 2
   top_k_features: 5
   poll_interval_seconds: 10
